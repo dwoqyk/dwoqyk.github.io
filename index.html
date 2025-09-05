@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Заявка на репетитора</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      margin: 0;
+      padding: 16px;
+      background: var(--tg-theme-bg-color, #0e1621);
+      color: var(--tg-theme-text-color, #fff);
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    label { display:block; font-size:14px; opacity:.9; margin-bottom:6px; }
+    select, input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+      color: inherit;
+      outline: none;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .muted { font-size:12px; opacity:.8; margin-top:6px; }
+    .hint { font-size:12px; opacity:.9; }
+    .badge { display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,.12); font-size:12px; margin-left:8px;}
+    .contact-row { display:grid; grid-template-columns: 1fr; gap: 8px; }
+    .note { font-size:12px; opacity:.8; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h2 style="margin:4px 0 16px;">Заявка на подбор репетитора</h2>
+
+  <div class="card">
+    <label>Предмет</label>
+    <select id="subject">
+      <option value="Английский язык">Английский язык</option>
+      <option value="Математика">Математика</option>
+      <option value="Русский язык">Русский язык</option>
+      <option value="Физика">Физика</option>
+      <option value="Химия">Химия</option>
+      <option value="Информатика / программирование">Информатика / программирование</option>
+      <option value="Другое">Другое</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <label>Кто ученик <span class="badge">возраст/класс</span></label>
+    <select id="student">
+      <option>7 лет, 2 класс</option>
+      <option>10 лет, 4 класс</option>
+      <option>14 лет, 8 класс</option>
+      <option>11 класс (ЕГЭ)</option>
+      <option>Взрослый студент</option>
+      <option>Другое</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <label>Бюджет</label>
+      <select id="rate">
+        <option>500–800 руб./занятие</option>
+        <option>800–1200 руб./занятие</option>
+        <option>1000–1500 руб./занятие</option>
+        <option>По договорённости</option>
+      </select>
+      <div class="muted">Можно выбрать «По договорённости»</div>
+    </div>
+
+    <div class="card">
+      <label>Занятий в неделю</label>
+      <select id="lessons">
+        <option>1 раз в неделю</option>
+        <option selected>2 раза в неделю</option>
+        <option>3 раза в неделю</option>
+        <option>По необходимости</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <label>Пожелания (формат, время, темы)</label>
+    <textarea id="comment" placeholder="Например: онлайн-формат, утро Пн/Ср, упор на грамматику"></textarea>
+  </div>
+
+  <div class="card">
+    <label>Контакт для связи</label>
+    <div class="contact-row">
+      <input id="contact" type="text" placeholder="@username или +71234567890" />
+      <div class="hint">Если у вас есть @username — можно оставить поле пустым, мы подставим его автоматически.</div>
+      <div class="note">Цена за заявку для репетитора — <b>2000 ₽</b>.</div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    tg?.expand(); // развернуть мини-приложение по возможности
+
+    // Попробуем автоподставить username в placeholder контакта
+    const user = tg?.initDataUnsafe?.user;
+    const contactInput = document.getElementById('contact');
+    if (user && user.username) {
+      contactInput.placeholder = "@" + user.username + " (оставьте пустым, если он верный)";
+    }
+
+    function getForm() {
+      return {
+        subject:  document.getElementById('subject').value,
+        student:  document.getElementById('student').value,
+        rate:     document.getElementById('rate').value,
+        lessons:  document.getElementById('lessons').value,
+        comment:  document.getElementById('comment').value.trim() || "без дополнительных пожеланий",
+        contact:  document.getElementById('contact').value.trim(), // может быть пустым: бот сам подставит @username
+      };
+    }
+
+    // Включаем главную кнопку Telegram
+    tg?.MainButton.setText("Отправить заявку");
+    tg?.MainButton.show();
+
+    tg?.onEvent('mainButtonClicked', () => {
+      const data = getForm();
+
+      // Простейшая проверка обязательных полей
+      if (!data.subject || !data.student || !data.rate || !data.lessons) {
+        tg.showAlert("Пожалуйста, заполните все поля.");
+        return;
+      }
+
+      // Если контакт пустой — ок (бот подставит @username). Если не пустой — слегка проверим формат.
+      const phoneRe = /^\+\d{10,15}$/;
+      if (data.contact && !(data.contact.startsWith("@") || phoneRe.test(data.contact))) {
+        tg.showAlert("Введите @username или телефон в формате +71234567890 (или оставьте пустым).");
+        return;
+      }
+
+      tg.sendData(JSON.stringify(data));
+      tg.close();
+    });
+  </script>
+</body>
+</html>
