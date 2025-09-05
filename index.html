@@ -2,158 +2,125 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>Заявка на репетитора</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Заявка на занятия</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root {
-      --tg-viewport-height: 100vh;
-      --tg-viewport-stable-height: 100vh;
+    :root{
+      --bg: var(--tg-theme-bg-color, #0b1220);
+      --card: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.12);
+      --text: var(--tg-theme-text-color, #fff);
+      --shadow: 0 12px 30px rgba(0,0,0,.25);
+      --radius: 16px;
     }
-    
-    * {
-      box-sizing: border-box;
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial;
+      background: radial-gradient(1200px 600px at 10% -10%, rgba(58,160,255,.25), transparent 60%),
+                  radial-gradient(1000px 600px at 110% 10%, rgba(255,176,32,.18), transparent 60%),
+                  var(--bg);
+      color: var(--text);
     }
-    
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
-      background: var(--tg-theme-bg-color, #ffffff);
-      color: var(--tg-theme-text-color, #000000);
-      min-height: var(--tg-viewport-stable-height, 100vh);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-    }
-    .card {
-      background: var(--tg-theme-secondary-bg-color, rgba(0,0,0,0.04));
-      border: 1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.08));
-      border-radius: 12px;
-      padding: 16px;
+    h1{ margin: 0 0 14px; font-size: 20px; letter-spacing:.2px; }
+    .sub{ opacity:.9; font-size:13px; margin-bottom:16px;}
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
       margin-bottom: 12px;
-      transition: background-color 0.2s ease;
+      box-shadow: var(--shadow);
     }
-    label { 
-      display: block; 
-      font-size: 14px; 
-      font-weight: 500;
-      color: var(--tg-theme-hint-color, rgba(0,0,0,0.6)); 
-      margin-bottom: 8px; 
-    }
-    select, input, textarea {
+    label{display:block; font-size:13px; opacity:.95; margin-bottom:6px;}
+    select, input, textarea{
       width: 100%;
-      padding: 12px 16px;
-      border-radius: 10px;
-      border: 1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.15));
-      background: var(--tg-theme-bg-color, #ffffff);
-      color: var(--tg-theme-text-color, #000000);
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.2s ease;
-      -webkit-appearance: none;
-      appearance: none;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text); outline:none;
     }
-    
-    select:focus, input:focus, textarea:focus {
-      border-color: var(--tg-theme-button-color, #0088cc);
-    }
-    
-    select {
-      background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23666' d='m2 0-2 2h4zm0 5 2-2h-4z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 12px;
-      padding-right: 36px;
-    }
-    textarea { 
-      min-height: 96px; 
-      resize: vertical; 
-      font-family: inherit;
-      line-height: 1.4;
-    }
-    .row { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 12px; 
-    }
-    
-    @media (max-width: 480px) {
-      .row {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-    }
-    .muted { 
-      font-size: 12px; 
-      color: var(--tg-theme-hint-color, rgba(0,0,0,0.6)); 
-      margin-top: 6px; 
-      line-height: 1.3;
-    }
-    .hint { 
-      font-size: 12px; 
-      color: var(--tg-theme-hint-color, rgba(0,0,0,0.6)); 
-      line-height: 1.3;
-    }
-    .badge { 
-      display: inline-block; 
-      padding: 3px 8px; 
-      border-radius: 12px; 
-      background: var(--tg-theme-button-color, rgba(0,136,204,0.15)); 
-      color: var(--tg-theme-button-text-color, #0088cc);
-      font-size: 11px; 
-      font-weight: 500;
-      margin-left: 8px;
-    }
-    .contact-row { display:grid; grid-template-columns: 1fr; gap: 8px; }
-    .note { 
-      font-size: 12px; 
-      color: var(--tg-theme-hint-color, rgba(0,0,0,0.6)); 
-      margin-top: 8px; 
-      line-height: 1.3;
-    }
+    textarea{min-height:100px; resize:vertical;}
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+    .muted{font-size:12px; opacity:.8; margin-top:6px}
+    .hidden{display:none;}
   </style>
 </head>
 <body>
-  <h2 style="margin:4px 0 20px; font-size:20px; font-weight:600; color:var(--tg-theme-text-color, #000000);">Заявка на подбор репетитора</h2>
+  <h1>Заявка на занятия</h1>
+  <div class="sub">Заполните поля — мы сразу начнём подбор подходящего репетитора.</div>
 
+  <!-- ПРЕДМЕТ -->
   <div class="card">
     <label>Предмет</label>
-    <select id="subject">
-      <option value="Английский язык">Английский язык</option>
-      <option value="Математика">Математика</option>
-      <option value="Русский язык">Русский язык</option>
-      <option value="Физика">Физика</option>
-      <option value="Химия">Химия</option>
-      <option value="Информатика / программирование">Информатика / программирование</option>
-      <option value="Другое">Другое</option>
+    <select id="subject" onchange="toggleSubjectCustom()">
+      <optgroup label="Языки">
+        <option>Английский язык</option>
+        <option>Русский язык</option>
+        <option>Литература</option>
+        <option>Немецкий язык</option>
+        <option>Французский язык</option>
+        <option>Испанский язык</option>
+        <option>Китайский язык</option>
+      </optgroup>
+      <optgroup label="Точные / IT">
+        <option>Математика</option>
+        <option>Математика ОГЭ</option>
+        <option>Математика ЕГЭ</option>
+        <option>Физика</option>
+        <option>Химия</option>
+        <option>Информатика / программирование</option>
+      </optgroup>
+      <optgroup label="Естественные / обществознание">
+        <option>Биология</option>
+        <option>География</option>
+        <option>История</option>
+        <option>Обществознание</option>
+      </optgroup>
+      <optgroup label="Школьная подготовка">
+        <option>Подготовка к школе</option>
+      </optgroup>
+      <optgroup label="Другое">
+        <option>Написать вручную</option>
+      </optgroup>
     </select>
+    <input id="subject_custom" class="hidden" type="text" placeholder="Введите предмет (например: Экономика, Логопед)"/>
   </div>
 
+  <!-- КТО УЧЕНИК -->
   <div class="card">
-    <label>Кто ученик <span class="badge">возраст/класс</span></label>
-    <select id="student">
-      <option>7 лет, 2 класс</option>
-      <option>10 лет, 4 класс</option>
-      <option>14 лет, 8 класс</option>
-      <option>11 класс (ЕГЭ)</option>
-      <option>Взрослый студент</option>
-      <option>Другое</option>
+    <label>Кто ученик</label>
+    <select id="student" onchange="toggleStudentCustom()">
+      <option>Начальная школа</option>
+      <option>Средняя школа</option>
+      <option>Старшая школа</option>
+      <option>Студент</option>
+      <option>Подготовка к экзаменам (ОГЭ/ЕГЭ)</option>
+      <option>Взрослый</option>
+      <option>Написать вручную</option>
     </select>
+    <input id="student_custom" class="hidden" type="text" placeholder="Опишите: класс/возраст/статус — как удобно"/>
   </div>
 
+  <!-- БЮДЖЕТ + ЗАНЯТИЙ -->
   <div class="row">
     <div class="card">
       <label>Бюджет</label>
-      <select id="rate">
-        <option>500–800 руб./занятие</option>
-        <option>800–1200 руб./занятие</option>
-        <option>1000–1500 руб./занятие</option>
+      <select id="rate" onchange="toggleRateCustom()">
+        <option>До 700 ₽</option>
+        <option>700–1000 ₽</option>
+        <option>1000–1500 ₽</option>
+        <option>1500–2000 ₽</option>
+        <option>2000–3000 ₽</option>
+        <option>3000+ ₽</option>
+        <option>Укажу сумму вручную</option>
         <option>По договорённости</option>
       </select>
-      <div class="muted">Можно выбрать «По договорённости»</div>
+      <input id="rate_custom" class="hidden" type="text" placeholder="Укажите сумму/диапазон (напр.: 1200 ₽ за 60 минут)"/>
+      <div class="muted">Если сомневаетесь — оставьте «По договорённости».</div>
     </div>
-
     <div class="card">
       <label>Занятий в неделю</label>
       <select id="lessons">
@@ -165,82 +132,102 @@
     </div>
   </div>
 
+  <!-- ПОЖЕЛАНИЯ -->
   <div class="card">
-    <label>Пожелания (формат, время, темы)</label>
-    <textarea id="comment" placeholder="Например: онлайн-формат, утро Пн/Ср, упор на грамматику"></textarea>
+    <label>Пожелания</label>
+    <textarea id="comment" placeholder="Онлайн/очный формат, дни недели, упор на грамматику, подготовка к ЕГЭ/ОГЭ"></textarea>
   </div>
 
+  <!-- КОНТАКТ -->
   <div class="card">
-    <label>Контакт для связи</label>
-    <div class="contact-row">
-      <input id="contact" type="text" placeholder="@username или +71234567890" />
-      <div class="hint">Если у вас есть @username — можно оставить поле пустым, мы подставим его автоматически.</div>
-      <div class="note">Цена за заявку для репетитора — <b>2000 ₽</b>.</div>
-    </div>
+    <label>Контакт для связи (необязательно)</label>
+    <input id="contact" type="text" placeholder="@username или +71234567890 (можно оставить пустым)"/>
+    <div class="muted">Если у вас есть @username, можно оставить поле пустым — бот подставит его автоматически.</div>
   </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
-    
-    if (tg) {
-      tg.expand();
-      tg.ready();
-      
-      // Применяем тему
-      const themeParams = tg.themeParams;
-      if (themeParams) {
-        const root = document.documentElement;
-        Object.entries(themeParams).forEach(([key, value]) => {
-          root.style.setProperty(`--tg-theme-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`, value);
-        });
-      }
-      
-      // Устанавливаем высоту viewport
-      const setViewportHeight = () => {
-        const height = tg.viewportHeight || window.innerHeight;
-        document.documentElement.style.setProperty('--tg-viewport-height', height + 'px');
-        document.documentElement.style.setProperty('--tg-viewport-stable-height', tg.viewportStableHeight || height + 'px');
-      };
-      
-      setViewportHeight();
-      tg.onEvent('viewportChanged', setViewportHeight);
-    }
+    tg?.expand();
 
-    // Попробуем автоподставить username в placeholder контакта
     const user = tg?.initDataUnsafe?.user;
-    const contactInput = document.getElementById('contact');
-    if (user && user.username) {
-      contactInput.placeholder = "@" + user.username + " (оставьте пустым, если он верный)";
+    if (user?.username) {
+      document.getElementById('contact').placeholder = "@" + user.username + " (можно оставить пустым)";
     }
 
-    function getForm() {
+    function toggleSubjectCustom(){
+      const sel = document.getElementById('subject');
+      const inp = document.getElementById('subject_custom');
+      inp.classList.toggle('hidden', sel.value !== 'Написать вручную');
+    }
+    function toggleStudentCustom(){
+      const sel = document.getElementById('student');
+      const inp = document.getElementById('student_custom');
+      inp.classList.toggle('hidden', sel.value !== 'Написать вручную');
+    }
+    function toggleRateCustom(){
+      const sel = document.getElementById('rate');
+      const inp = document.getElementById('rate_custom');
+      inp.classList.toggle('hidden', sel.value !== 'Укажу сумму вручную');
+    }
+
+    function getForm(){
+      const subject = document.getElementById('subject').value;
+      const student = document.getElementById('student').value;
+      const rate    = document.getElementById('rate').value;
+
       return {
-        subject:  document.getElementById('subject').value,
-        student:  document.getElementById('student').value,
-        rate:     document.getElementById('rate').value,
-        lessons:  document.getElementById('lessons').value,
-        comment:  document.getElementById('comment').value.trim() || "без дополнительных пожеланий",
-        contact:  document.getElementById('contact').value.trim(), // может быть пустым: бот сам подставит @username
+        subject,
+        subject_custom: subject === 'Написать вручную'
+          ? (document.getElementById('subject_custom').value || "").trim()
+          : "",
+
+        student,
+        student_custom: student === 'Написать вручную'
+          ? (document.getElementById('student_custom').value || "").trim()
+          : "",
+
+        rate,
+        rate_custom: rate === 'Укажу сумму вручную'
+          ? (document.getElementById('rate_custom').value || "").trim()
+          : "",
+
+        lessons: document.getElementById('lessons').value,
+        comment: (document.getElementById('comment').value || "").trim(),
+        contact: (document.getElementById('contact').value || "").trim(),
       };
     }
 
-    // Включаем главную кнопку Telegram
     tg?.MainButton.setText("Отправить заявку");
     tg?.MainButton.show();
 
     tg?.onEvent('mainButtonClicked', () => {
       const data = getForm();
 
-      // Простейшая проверка обязательных полей
-      if (!data.subject || !data.student || !data.rate || !data.lessons) {
-        tg.showAlert("Пожалуйста, заполните все поля.");
+      // проверка обязательных
+      const req = ["subject","student","rate","lessons"];
+      for (const k of req) {
+        if (!data[k] || !String(data[k]).trim()) {
+          tg.showAlert("Пожалуйста, заполните все поля.");
+          return;
+        }
+      }
+      if (data.subject === 'Написать вручную' && !data.subject_custom) {
+        tg.showAlert("Пожалуйста, укажите предмет вручную.");
+        return;
+      }
+      if (data.student === 'Написать вручную' && !data.student_custom) {
+        tg.showAlert("Пожалуйста, опишите, кто ученик.");
+        return;
+      }
+      if (data.rate === 'Укажу сумму вручную' && !data.rate_custom) {
+        tg.showAlert("Пожалуйста, укажите вашу сумму.");
         return;
       }
 
-      // Если контакт пустой — ок (бот подставит @username). Если не пустой — слегка проверим формат.
+      // контакт можно не указывать; если указан — проверим формат
       const phoneRe = /^\+\d{10,15}$/;
       if (data.contact && !(data.contact.startsWith("@") || phoneRe.test(data.contact))) {
-        tg.showAlert("Введите @username или телефон в формате +71234567890 (или оставьте пустым).");
+        tg.showAlert("Введите @username или телефон в формате +71234567890 (или оставьте поле пустым).");
         return;
       }
 
