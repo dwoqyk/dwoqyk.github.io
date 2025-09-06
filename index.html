@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Заявка на занятия</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
@@ -11,6 +11,9 @@
       --card: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.12);
       --text: var(--tg-theme-text-color, #fff);
+      --hint: rgba(255,255,255,.85);
+      --brand: #3aa0ff;
+      --accent: #ffb020;
       --shadow: 0 12px 30px rgba(0,0,0,.25);
       --radius: 16px;
     }
@@ -23,8 +26,16 @@
                   var(--bg);
       color: var(--text);
     }
-    h1{ margin: 0 0 14px; font-size: 20px; letter-spacing:.2px; }
-    .sub{ opacity:.9; font-size:13px; margin-bottom:16px;}
+    h1{ margin: 0 0 10px; font-size: 20px; letter-spacing:.2px; }
+    .sub{ opacity:.9; font-size:13px; margin-bottom:12px;}
+    .top-actions{ display:flex; gap:8px; margin-bottom:12px; }
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 10px; font-size:13px; border-radius:999px;
+      background: rgba(255,255,255,.08); border:1px solid var(--border);
+      cursor:pointer; user-select:none;
+    }
+    .pill:hover{ background: rgba(255,255,255,.12); }
     .card{
       background: var(--card);
       border: 1px solid var(--border);
@@ -41,18 +52,37 @@
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.06);
       color: var(--text); outline:none;
-      font-size: 16px; /* Предотвращает зум на iOS */
-      -webkit-appearance: none;
     }
     textarea{min-height:100px; resize:vertical;}
     .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
-    .muted{font-size:12px; opacity:.8; margin-top:6px}
+    .muted{font-size:12px; color: var(--hint); margin-top:6px}
     .hidden{display:none;}
+    /* FAQ */
+    details{
+      background: rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      border-radius:12px; padding:10px 12px; margin-bottom:8px;
+    }
+    details[open]{ background: rgba(255,255,255,.07); }
+    summary{
+      list-style:none; cursor:pointer; font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .faq-icon{ width:18px; height:18px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:rgba(58,160,255,.25); }
+    .faq-body{ font-size:13px; opacity:.95; margin-top:8px; line-height:1.45; }
+    .faq-badge{ display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(58,160,255,.18); color:#bfe1ff; font-size:12px; margin-left:6px;}
+    .code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: rgba(255,255,255,.12); padding:1px 6px; border-radius:6px;}
   </style>
 </head>
 <body>
   <h1>Заявка на занятия</h1>
-  <div class="sub">Заполните поля — мы сразу начнём подбор подходящего репетитора.</div>
+  <div class="sub">Пара кликов — и мы начнём подбор подходящего репетитора.</div>
+
+  <div class="top-actions">
+    <a class="pill" href="#faq" onclick="setTimeout(()=>document.getElementById('faq').open=true, 0)">
+      <span>ℹ️</span> <span>Помощь и FAQ</span>
+    </a>
+  </div>
 
   <!-- ПРЕДМЕТ -->
   <div class="card">
@@ -66,8 +96,9 @@
         <option>Французский язык</option>
         <option>Испанский язык</option>
         <option>Китайский язык</option>
+        <option>Итальянский язык</option>
       </optgroup>
-      <optgroup label="Точные / IT">
+      <optgroup label="Точные науки">
         <option>Математика</option>
         <option>Математика ОГЭ</option>
         <option>Математика ЕГЭ</option>
@@ -75,23 +106,26 @@
         <option>Химия</option>
         <option>Информатика / программирование</option>
       </optgroup>
-      <optgroup label="Естественные / обществознание">
+      <optgroup label="Естественные и общественные">
         <option>Биология</option>
         <option>География</option>
         <option>История</option>
         <option>Обществознание</option>
+        <option>Экономика</option>
       </optgroup>
-      <optgroup label="Школьная подготовка">
+      <optgroup label="Школьная подготовка и прочее">
         <option>Подготовка к школе</option>
+        <option>Логопед</option>
       </optgroup>
       <optgroup label="Другое">
         <option>Написать вручную</option>
       </optgroup>
     </select>
-    <input id="subject_custom" class="hidden" type="text" placeholder="Введите предмет (например: Экономика, Логопед)"/>
+    <input id="subject_custom" class="hidden" type="text" placeholder="Введите предмет (например: экономика, логопед и т.д.)" />
+    <div class="muted">Не нашли? Выберите «Написать вручную» и укажите предмет сами.</div>
   </div>
 
-  <!-- КТО УЧЕНИК -->
+  <!-- УЧЕНИК -->
   <div class="card">
     <label>Кто ученик</label>
     <select id="student" onchange="toggleStudentCustom()">
@@ -103,10 +137,11 @@
       <option>Взрослый</option>
       <option>Написать вручную</option>
     </select>
-    <input id="student_custom" class="hidden" type="text" placeholder="Опишите: класс/возраст/статус — как удобно"/>
+    <input id="student_custom" class="hidden" type="text" placeholder="Опишите: класс/возраст/статус — как удобно" />
+    <div class="muted">Можно кратко: «5 класс», «11 класс (профиль)», «взрослый: разговорный английский».</div>
   </div>
 
-  <!-- БЮДЖЕТ + ЗАНЯТИЙ -->
+  <!-- СТАВКА/БЮДЖЕТ + ЗАНЯТИЙ -->
   <div class="row">
     <div class="card">
       <label>Бюджет</label>
@@ -120,9 +155,10 @@
         <option>Укажу сумму вручную</option>
         <option>По договорённости</option>
       </select>
-      <input id="rate_custom" class="hidden" type="text" placeholder="Укажите сумму/диапазон (напр.: 1200 ₽ за 60 минут)"/>
-      <div class="muted">Если сомневаетесь — оставьте «По договорённости».</div>
+      <input id="rate_custom" class="hidden" type="text" placeholder="Например: 1200 ₽ за 60 минут или 1800 ₽ за 90 минут" />
+      <div class="muted">Если сомневаетесь — оставьте «По договорённости». Мы подскажем рынок по вашему запросу.</div>
     </div>
+
     <div class="card">
       <label>Занятий в неделю</label>
       <select id="lessons">
@@ -138,49 +174,57 @@
   <div class="card">
     <label>Пожелания</label>
     <textarea id="comment" placeholder="Онлайн/очный формат, дни недели, упор на грамматику, подготовка к ЕГЭ/ОГЭ"></textarea>
+    <div class="muted">Можно добавить учебник («Петерсон»), желаемую длительность урока (60/90 мин) и часовой пояс.</div>
   </div>
 
   <!-- КОНТАКТ -->
   <div class="card">
     <label>Контакт для связи (необязательно)</label>
-    <input id="contact" type="text" placeholder="@username или +71234567890 (можно оставить пустым)"/>
-    <div class="muted">Если у вас есть @username, можно оставить поле пустым — бот подставит его автоматически.</div>
+    <input id="contact" type="text" placeholder="@username или +71234567890 (можно оставить пустым)" />
+    <div class="muted">Мы не публикуем ваши контакты в общем чате. Они видны только менеджеру для связи.</div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="card">
+    <details id="faq">
+      <summary><span class="faq-icon">ℹ️</span> Подсказки и FAQ</summary>
+      <div class="faq-body">
+        <p><b>Как быстро со мной свяжутся?</b><br>
+        Обычно в течение 1–3 часов в рабочее время. Если запрос пришёл вечером, ответ может быть утром.</p>
+
+        <p><b>Как выбрать бюджет?</b><br>
+        Ориентиры по рынку: начальная школа — 700–1200 ₽/час, средние классы — 1000–1500 ₽,
+        старшие классы/ЕГЭ — 1500–2500 ₽, языки с носителем — от 2000 ₽. Если не уверены — выберите
+        «По договорённости», и мы порекомендуем диапазон под вашу задачу.</p>
+
+        <p><b>Что указать в «Пожеланиях»?</b><br>
+        Формат (онлайн/очно), дни/время, длительность (60/90 мин), учебник («Петерсон», «Мерзляк»),
+        акцент (грамматика/практика/подготовка к ЕГЭ/ОГЭ), часовой пояс. Пример:
+        <span class="code">онлайн, вт/чт 18:00 мск, 60 мин, акцент на грамматику, учебник Петерсон</span>.</p>
+
+        <p><b>Нужен ли @username?</b><br>
+        Если у вас есть @username — можно оставить «Контакт» пустым: мы подставим его автоматически.
+        Если нет — укажите телефон в формате <span class="code">+7XXXXXXXXXX</span>.</p>
+
+        <p><b>Как поставить @username?</b><br>
+        Telegram → <i>Настройки</i> → <i>Изменить профиль</i> → <i>Имя пользователя</i> → введите уникальное имя без «@» → Сохранить.
+        После этого контакт можно не указывать — мы увидим ваш username автоматически.</p>
+
+        <p><b>Безопасность контактов</b><br>
+        Контактные данные из этой формы видны только менеджеру и не отправляются в общий чат с репетиторами.</p>
+      </div>
+    </details>
   </div>
 
   <script>
     const tg = window.Telegram?.WebApp;
     tg?.expand();
 
+    // Автоплейсхолдер контакта по username
     const user = tg?.initDataUnsafe?.user;
     if (user?.username) {
       document.getElementById('contact').placeholder = "@" + user.username + " (можно оставить пустым)";
     }
-
-    // Скрытие клавиатуры на iPhone при тапе вне полей ввода
-    function hideKeyboard() {
-      if (document.activeElement && 
-          (document.activeElement.tagName.toLowerCase() === 'input' || 
-           document.activeElement.tagName.toLowerCase() === 'textarea')) {
-        document.activeElement.blur();
-      }
-    }
-
-    document.addEventListener('touchstart', function(e) {
-      const inputs = ['input', 'textarea', 'select'];
-      const isInputTarget = inputs.some(tag => e.target.tagName.toLowerCase() === tag);
-      const isInputParent = e.target.closest('input, textarea, select');
-      
-      if (!isInputTarget && !isInputParent) {
-        hideKeyboard();
-      }
-    }, false);
-
-    // Дополнительная обработка для скрытия клавиатуры при скролле
-    let scrollTimer;
-    document.addEventListener('touchmove', function() {
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(hideKeyboard, 150);
-    }, { passive: true });
 
     function toggleSubjectCustom(){
       const sel = document.getElementById('subject');
@@ -225,13 +269,14 @@
       };
     }
 
+    // Главная кнопка
     tg?.MainButton.setText("Отправить заявку");
     tg?.MainButton.show();
 
     tg?.onEvent('mainButtonClicked', () => {
       const data = getForm();
 
-      // проверка обязательных
+      // базовая валидация
       const req = ["subject","student","rate","lessons"];
       for (const k of req) {
         if (!data[k] || !String(data[k]).trim()) {
@@ -252,7 +297,6 @@
         return;
       }
 
-      // контакт можно не указывать; если указан — проверим формат
       const phoneRe = /^\+\d{10,15}$/;
       if (data.contact && !(data.contact.startsWith("@") || phoneRe.test(data.contact))) {
         tg.showAlert("Введите @username или телефон в формате +71234567890 (или оставьте поле пустым).");
