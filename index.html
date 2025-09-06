@@ -8,14 +8,15 @@
   <style>
     :root{
       --bg: var(--tg-theme-bg-color, #0b1220);
-      --card: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.12);
+      --card: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.06));
+      --border: var(--tg-theme-hint-color, rgba(255,255,255,0.12));
       --text: var(--tg-theme-text-color, #fff);
-      --hint: rgba(255,255,255,.85);
-      --brand: #3aa0ff;
+      --hint: var(--tg-theme-hint-color, rgba(255,255,255,.85));
+      --brand: var(--tg-theme-link-color, #3aa0ff);
       --accent: #ffb020;
       --shadow: 0 12px 30px rgba(0,0,0,.25);
       --radius: 16px;
+      --input-bg: var(--tg-theme-secondary-bg-color, rgba(255,255,255,0.08));
     }
     *{box-sizing:border-box}
     body{
@@ -50,8 +51,20 @@
       padding: 11px 12px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.06);
+      background: var(--input-bg);
       color: var(--text); outline:none;
+    }
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--brand);
+    }
+    select option {
+      background: var(--tg-theme-bg-color, #0b1220);
+      color: var(--text);
+    }
+    select optgroup {
+      background: var(--tg-theme-bg-color, #0b1220);
+      color: var(--hint);
+      font-weight: 600;
     }
     textarea{min-height:100px; resize:vertical;}
     .row{ display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
