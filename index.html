@@ -192,15 +192,15 @@
 
   <!-- КОНТАКТ -->
   <div class="card">
-    <label>Контакт для связи <span style="color: #ff4444;">*</span></label>
-    <div style="margin-bottom: 8px;">
-      <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;">
-        <input type="checkbox" id="has_username" onchange="toggleContactField()" style="accent-color: var(--brand);">
-        <span>У меня есть @username в Telegram</span>
+    <label>Контакт для связи</label>
+    <div style="margin-bottom: 10px;">
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
+        <input type="checkbox" id="hasUsername" onchange="toggleContactMode()" style="margin: 0;">
+        У меня есть username
       </label>
     </div>
-    <input id="contact" type="text" placeholder="Введите +71234567890" />
-    <div class="muted" id="contact_hint">Укажите номер телефона в формате +71234567890</div>
+    <input id="contact" type="text" placeholder="@username или +71234567890" />
+    <div class="muted">Если у вас нет username, введите номер телефона в формате +71234567890</div>
   </div>
 
   <!-- FAQ -->
@@ -221,9 +221,9 @@
         акцент (грамматика/практика/подготовка к ЕГЭ/ОГЭ), часовой пояс. Пример:
         <span class="code">онлайн, вт/чт 18:00 мск, 60 мин, акцент на грамматику, учебник Петерсон</span>.</p>
 
-        <p><b>Как указать контакт?</b><br>
-        Если у вас есть @username в Telegram — поставьте галочку, и мы используем его автоматически.
-        Если нет @username — укажите телефон в формате <span class="code">+7XXXXXXXXXX</span>.</p>
+        <p><b>Нужен ли @username?</b><br>
+        Если у вас есть @username — можно оставить «Контакт» пустым: мы подставим его автоматически.
+        Если нет — укажите телефон в формате <span class="code">+7XXXXXXXXXX</span>.</p>
 
         <p><b>Как поставить @username?</b><br>
         Telegram → <i>Настройки</i> → <i>Изменить профиль</i> → <i>Имя пользователя</i> → введите уникальное имя без «@» → Сохранить.
@@ -237,17 +237,12 @@
     const tg = window.Telegram?.WebApp;
     tg?.expand();
 
-    // Автоопределение username и настройка поля контакта
+    // Автоплейсхолдер контакта по username
     const user = tg?.initDataUnsafe?.user;
-    const hasUsernameCheckbox = document.getElementById('has_username');
-    const contactInput = document.getElementById('contact');
-    const contactHint = document.getElementById('contact_hint');
-    
     if (user?.username) {
-      hasUsernameCheckbox.checked = true;
-      contactInput.style.display = 'none';
-      contactHint.textContent = `Ваш @username: @${user.username} — контакт заполнен автоматически`;
-      contactHint.style.color = 'var(--brand)';
+      document.getElementById('contact').placeholder = "@" + user.username;
+      document.getElementById('hasUsername').checked = true;
+      toggleContactMode();
     }
 
     function toggleSubjectCustom(){
@@ -265,27 +260,42 @@
       const inp = document.getElementById('rate_custom');
       inp.classList.toggle('hidden', sel.value !== 'Укажу сумму вручную');
     }
-    
-    function toggleContactField(){
-      const checkbox = document.getElementById('has_username');
+
+    function toggleContactMode(){
+      const hasUsername = document.getElementById('hasUsername').checked;
       const contactInput = document.getElementById('contact');
-      const contactHint = document.getElementById('contact_hint');
       
-      if (checkbox.checked) {
+      if (hasUsername) {
+        contactInput.placeholder = user?.username ? "@" + user.username : "@username";
         contactInput.style.display = 'none';
-        contactInput.value = '';
-        if (user?.username) {
-          contactHint.textContent = `Ваш @username: @${user.username} — контакт заполнен автоматически`;
-          contactHint.style.color = 'var(--brand)';
-        } else {
-          contactHint.textContent = 'Убедитесь, что у вас настроен @username в Telegram';
-          contactHint.style.color = '#ff4444';
-        }
       } else {
+        contactInput.placeholder = "+71234567890";
         contactInput.style.display = 'block';
-        contactInput.placeholder = 'Введите +71234567890';
-        contactHint.textContent = 'Укажите номер телефона в формате +71234567890';
-        contactHint.style.color = 'var(--hint)';
+        contactInput.value = '';
+      }
+      updateMainButtonState();
+    }
+
+    function updateMainButtonState(){
+      const hasUsername = document.getElementById('hasUsername').checked;
+      const contactValue = document.getElementById('contact').value.trim();
+      
+      let isContactValid = false;
+      if (hasUsername) {
+        // Если есть username, контакт не нужен
+        isContactValid = true;
+      } else {
+        // Если нет username, нужен номер телефона
+        const phoneRe = /^\+\d{10,15}$/;
+        isContactValid = contactValue && phoneRe.test(contactValue);
+      }
+      
+      if (isContactValid) {
+        tg?.MainButton.enable();
+        tg?.MainButton.color = '#3aa0ff';
+      } else {
+        tg?.MainButton.disable();
+        tg?.MainButton.color = '#999999';
       }
     }
 
@@ -313,12 +323,19 @@
         lessons: document.getElementById('lessons').value,
         comment: (document.getElementById('comment').value || "").trim(),
         contact: (document.getElementById('contact').value || "").trim(),
+        hasUsername: document.getElementById('hasUsername').checked,
       };
     }
 
     // Главная кнопка
     tg?.MainButton.setText("Отправить заявку");
     tg?.MainButton.show();
+    
+    // Добавляем слушатель события для поля контакта
+    document.getElementById('contact').addEventListener('input', updateMainButtonState);
+    
+    // Инициализируем состояние кнопки
+    updateMainButtonState();
 
     tg?.onEvent('mainButtonClicked', () => {
       const data = getForm();
@@ -344,26 +361,11 @@
         return;
       }
 
-      // Валидация контакта (теперь обязательное поле)
-      const hasUsername = document.getElementById('has_username').checked;
-      
-      if (hasUsername) {
-        // Если отмечен чекбокс "У меня есть username"
-        if (!user?.username) {
-          tg.showAlert("У вас не настроен @username в Telegram. Снимите галочку и укажите номер телефона.");
-          return;
-        }
-        // Подставляем username автоматически
-        data.contact = `@${user.username}`;
-      } else {
-        // Если чекбокс не отмечен, требуем телефон
-        if (!data.contact.trim()) {
-          tg.showAlert("Пожалуйста, укажите контактный номер телефона.");
-          return;
-        }
+      const hasUsername = document.getElementById('hasUsername').checked;
+      if (!hasUsername) {
         const phoneRe = /^\+\d{10,15}$/;
-        if (!phoneRe.test(data.contact)) {
-          tg.showAlert("Введите телефон в формате +71234567890");
+        if (!data.contact || !phoneRe.test(data.contact)) {
+          tg.showAlert("Введите номер телефона в формате +71234567890 или отметьте галочку 'У меня есть username'.");
           return;
         }
       }
