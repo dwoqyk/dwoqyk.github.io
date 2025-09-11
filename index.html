@@ -85,6 +85,25 @@
     .faq-body{ font-size:13px; opacity:.95; margin-top:8px; line-height:1.45; }
     .faq-badge{ display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(58,160,255,.18); color:#bfe1ff; font-size:12px; margin-left:6px;}
     .code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: rgba(255,255,255,.12); padding:1px 6px; border-radius:6px;}
+    /* Custom checkbox */
+    .checkbox-wrapper {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+      padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.05);
+      border: 1px solid var(--border); cursor: pointer;
+    }
+    .checkbox-wrapper:hover { background: rgba(255,255,255,.08); }
+    .custom-checkbox {
+      width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border);
+      background: transparent; position: relative; flex-shrink: 0;
+    }
+    .custom-checkbox.checked {
+      background: var(--brand); border-color: var(--brand);
+    }
+    .custom-checkbox.checked::after {
+      content: '✓'; position: absolute; top: -1px; left: 2px;
+      color: white; font-size: 12px; font-weight: bold;
+    }
+    .checkbox-label { font-size: 14px; color: var(--text); user-select: none; }
   </style>
 </head>
 <body>
@@ -193,12 +212,11 @@
   <!-- КОНТАКТ -->
   <div class="card">
     <label>Контакт для связи</label>
-    <div style="margin-bottom: 10px;">
-      <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer;">
-        <input type="checkbox" id="hasUsername" onchange="toggleContactMode()" style="margin: 0;">
-        У меня есть username
-      </label>
+    <div class="checkbox-wrapper" onclick="toggleUsername()">
+      <div class="custom-checkbox" id="usernameCheckbox"></div>
+      <div class="checkbox-label">У меня есть username</div>
     </div>
+    <input type="hidden" id="hasUsername" value="false" />
     <input id="contact" type="text" placeholder="@username или +71234567890" />
     <div class="muted">Если у вас нет username, введите номер телефона в формате +71234567890</div>
   </div>
@@ -241,7 +259,8 @@
     const user = tg?.initDataUnsafe?.user;
     if (user?.username) {
       document.getElementById('contact').placeholder = "@" + user.username;
-      document.getElementById('hasUsername').checked = true;
+      document.getElementById('hasUsername').value = "true";
+      document.getElementById('usernameCheckbox').classList.add('checked');
       toggleContactMode();
     }
 
@@ -261,8 +280,19 @@
       inp.classList.toggle('hidden', sel.value !== 'Укажу сумму вручную');
     }
 
+    function toggleUsername(){
+      const hasUsernameInput = document.getElementById('hasUsername');
+      const checkbox = document.getElementById('usernameCheckbox');
+      const isChecked = hasUsernameInput.value === "true";
+      
+      hasUsernameInput.value = isChecked ? "false" : "true";
+      checkbox.classList.toggle('checked', !isChecked);
+      
+      toggleContactMode();
+    }
+
     function toggleContactMode(){
-      const hasUsername = document.getElementById('hasUsername').checked;
+      const hasUsername = document.getElementById('hasUsername').value === "true";
       const contactInput = document.getElementById('contact');
       
       if (hasUsername) {
@@ -277,7 +307,7 @@
     }
 
     function updateMainButtonState(){
-      const hasUsername = document.getElementById('hasUsername').checked;
+      const hasUsername = document.getElementById('hasUsername').value === "true";
       const contactValue = document.getElementById('contact').value.trim();
       
       let isContactValid = false;
@@ -290,12 +320,14 @@
         isContactValid = contactValue && phoneRe.test(contactValue);
       }
       
-      if (isContactValid) {
-        tg?.MainButton.enable();
-        tg?.MainButton.color = '#3aa0ff';
-      } else {
-        tg?.MainButton.disable();
-        tg?.MainButton.color = '#999999';
+      if (tg?.MainButton) {
+        if (isContactValid) {
+          tg.MainButton.enable();
+          tg.MainButton.color = '#3aa0ff';
+        } else {
+          tg.MainButton.disable();
+          tg.MainButton.color = '#999999';
+        }
       }
     }
 
@@ -323,19 +355,21 @@
         lessons: document.getElementById('lessons').value,
         comment: (document.getElementById('comment').value || "").trim(),
         contact: (document.getElementById('contact').value || "").trim(),
-        hasUsername: document.getElementById('hasUsername').checked,
+        hasUsername: document.getElementById('hasUsername').value === "true",
       };
     }
 
     // Главная кнопка
-    tg?.MainButton.setText("Отправить заявку");
-    tg?.MainButton.show();
-    
-    // Добавляем слушатель события для поля контакта
-    document.getElementById('contact').addEventListener('input', updateMainButtonState);
-    
-    // Инициализируем состояние кнопки
-    updateMainButtonState();
+    if (tg?.MainButton) {
+      tg.MainButton.setText("Отправить заявку");
+      tg.MainButton.show();
+      
+      // Добавляем слушатель события для поля контакта
+      document.getElementById('contact').addEventListener('input', updateMainButtonState);
+      
+      // Инициализируем состояние кнопки
+      setTimeout(updateMainButtonState, 100);
+    }
 
     tg?.onEvent('mainButtonClicked', () => {
       const data = getForm();
@@ -361,7 +395,7 @@
         return;
       }
 
-      const hasUsername = document.getElementById('hasUsername').checked;
+      const hasUsername = document.getElementById('hasUsername').value === "true";
       if (!hasUsername) {
         const phoneRe = /^\+\d{10,15}$/;
         if (!data.contact || !phoneRe.test(data.contact)) {
